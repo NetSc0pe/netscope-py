@@ -1,0 +1,18 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "netscope-py"
+version = "0.1.0"
+description = "Python wrapper for netscope-scan port scanner"
+requires-python = ">=3.12"
+license = { text = "MIT" }
+dependencies = []
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/netscope"]
+artifacts = ["src/netscope/bin/"]
+
+[tool.hatch.build.hooks.custom]
+path = "hatch_build.py"

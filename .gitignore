@@ -1,0 +1,6 @@
+src/netscope/bin/netscope-scan
+src/netscope/bin/netscope-scan.exe
+dist/
+__pycache__/
+*.egg-info/
+.venv/

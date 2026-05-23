@@ -1,0 +1,85 @@
+name: Publish to PyPI
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  build:
+    name: Build (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-musl
+            plat: manylinux_2_17_x86_64.manylinux2014_x86_64
+          - os: macos-14
+            target: aarch64-apple-darwin
+            plat: macosx_11_0_arm64
+          - os: macos-13
+            target: x86_64-apple-darwin
+            plat: macosx_10_12_x86_64
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Checkout netscope-scan
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository_owner }}/netscope-scan
+          path: _scanner_src
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Install musl-tools (Linux)
+        if: runner.os == 'Linux'
+        run: sudo apt-get install -y musl-tools
+
+      - name: Build binary
+        working-directory: _scanner_src
+        run: cargo build --release --target ${{ matrix.target }}
+
+      - name: Bundle binary
+        run: |
+          mkdir -p src/netscope/bin
+          cp _scanner_src/target/${{ matrix.target }}/release/netscope-scan src/netscope/bin/
+          chmod +x src/netscope/bin/netscope-scan
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Build wheel
+        run: |
+          pip install build wheel hatchling
+          python -m build --wheel
+          wheel tags \
+            --python-tag py3 \
+            --abi-tag none \
+            --platform-tag ${{ matrix.plat }} \
+            dist/*.whl
+          rm -f dist/*-none-any.whl
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wheel-${{ matrix.os }}
+          path: dist/*.whl
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: wheel-*
+          path: dist
+          merge-multiple: true
+
+      - uses: pypa/gh-action-pypi-publish@release/v1
