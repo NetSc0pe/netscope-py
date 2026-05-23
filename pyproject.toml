@@ -6,6 +6,7 @@ build-backend = "hatchling.build"
 name = "netscope-py"
 version = "0.1.0"
 description = "Python wrapper for netscope-scan port scanner"
+readme = "README.md"
 requires-python = ">=3.12"
 license = { text = "MIT" }
 dependencies = []
