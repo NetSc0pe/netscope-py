@@ -70,6 +70,7 @@ def _args(
     exclude_addresses: list[str] | None,
     udp: bool,
     resolver: str | None,
+    confirm: int | None,
 ) -> list[str]:
     """Build the full argv list for a netscope-scan invocation.
 
@@ -123,6 +124,8 @@ def _args(
         cmd += ["--udp"]
     if resolver:
         cmd += ["--resolver", resolver]
+    if confirm is not None:
+        cmd += ["--confirm", str(confirm)]
 
     return cmd
 
@@ -160,6 +163,7 @@ def scan(
     exclude_addresses: list[str] | None = None,
     udp: bool = False,
     resolver: str | None = None,
+    confirm: int | None = None,
 ) -> list[ScanResult]:
     """Run a blocking port scan via netscope-scan.
 
@@ -214,7 +218,7 @@ def scan(
         addresses, ports=ports, range=range, batch_size=batch_size,
         timeout=timeout, tries=tries, ulimit=ulimit, scan_order=scan_order,
         top=top, exclude_ports=exclude_ports, exclude_addresses=exclude_addresses,
-        udp=udp, resolver=resolver,
+        udp=udp, resolver=resolver, confirm=confirm,
     )
     result = subprocess.run(cmd, capture_output=True)
     if result.returncode != 0:
@@ -237,6 +241,7 @@ async def scan_async(
     exclude_addresses: list[str] | None = None,
     udp: bool = False,
     resolver: str | None = None,
+    confirm: int | None = None,
 ) -> list[ScanResult]:
     """Run a non-blocking port scan via netscope-scan.
 
@@ -283,7 +288,7 @@ async def scan_async(
         addresses, ports=ports, range=range, batch_size=batch_size,
         timeout=timeout, tries=tries, ulimit=ulimit, scan_order=scan_order,
         top=top, exclude_ports=exclude_ports, exclude_addresses=exclude_addresses,
-        udp=udp, resolver=resolver,
+        udp=udp, resolver=resolver, confirm=confirm,
     )
     proc = await asyncio.create_subprocess_exec(
         *cmd,
